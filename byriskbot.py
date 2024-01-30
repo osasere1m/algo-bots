@@ -6,8 +6,8 @@ from pybit.unified_trading import HTTP
 
 
 bybit = ccxt.bybit({
-    'apiKey': 'LQLW7aAhcalaYMAiUe',
-    'secret': 'X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD',
+    'apiKey': 'i1UQddbDArbewF1ETS',
+    'secret': 'VHyrOH6gKFjyyPf3zkceaNskQOEWM1Vj63bP',
     'enableRateLimit': True,
     'options': {
         'defaultType': 'future',
@@ -15,16 +15,20 @@ bybit = ccxt.bybit({
     }
 })
 
-api_key = "LQLW7aAhcalaYMAiUe"
-api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
+
+
+
+
+api_key = "i1UQddbDArbewF1ETS"
+api_secret = "VHyrOH6gKFjyyPf3zkceaNskQOEWM1Vj63bP"
 
 session = HTTP(
     api_key=api_key,
     api_secret=api_secret,
-    testnet= False,
+    testnet= True,
 )
 
-#bybit.set_sandbox_mode(True) # activates testnet mode
+bybit.set_sandbox_mode(True) # activates testnet mode
 bybit.options["dafaultType"] = 'future'
 bybit.load_markets()
 
@@ -47,7 +51,7 @@ get_balance()
 def kill_switch():
     try:
         positions = bybit.fetch_positions()
-        print(f"{positions}information")
+        #print(f"{positions}information")
 
         for position in positions:
             if abs(position['contracts']) > 0:
@@ -70,60 +74,24 @@ def kill_switch():
                 pnl = position['unrealizedPnl'] * 100
 
                 print(f"pnl {pnl} percent")
+                #10 x leverage= tp =1.02 and sl=0.71
+        
 
-                if pnl <= -4 or pnl >= 20:
-
+                if pnl <= -14.4 or pnl >= 21:
                     print(f"Closing position for {symbol} with PnL: {pnl}%")
-
-                    if position['side'] =='short':
-                        response = session.get_positions(
-                            category="linear",
-                            symbol="AAVEUSDT",
-                        )
-                        print(f"{response}information")
-                        positions = response['result']['list']
-                        for position in positions:
-                            unrealized_pnl = position['unrealisedPnl']
-                            size = position['size']
-
-                            side = 'buy'
-                            symbol = position['symbol']
-                            order = session.place_order(
-                                category="linear",
-                                symbol=symbol,
-                                side=side,
-                                orderType="Market",
-                                qty=size,
-                                timeInForce="GTC",
-                            )
-
-                        print(f"long order placed: {order}")
+                
+                    if position['side'] == 'short':
+                        side = 'buy'
+                        order = bybit.create_market_buy_order(symbol=symbol, amount=amount)
                         if order:
                             print(f"Position closed: {order}")
-                    else :
-                        response = session.get_positions(
-                            category="linear",
-                            symbol="AAVEUSDT",
-                        )
-                        #print(f"{response}information")
-                        positions = response['result']['list']
-                        for position in positions:
-                            
-                            size = position['size']
-                            
-                            side = 'sell'
-                            symbol = position['symbol']
-                            order = session.place_order(
-                                category="linear",
-                                symbol=symbol,
-                                side=side,
-                                orderType="Market",
-                                qty=size,
-                                timeInForce="GTC",
-                            )
-                        
+                    else:
+                        side = 'sell'
+                        order = bybit.create_market_sell_order(symbol=symbol, amount=amount)
                         if order:
                             print(f"Position closed: {order}")
+
+
     except ccxt.RequestTimeout as e:
         print(f"A request timeout occurred: {e}")
     except ccxt.AuthenticationError as e:

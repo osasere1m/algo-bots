@@ -77,8 +77,8 @@ print(df)
 df["entrysignal"] = 0
 
 #in a downtrend 
-df.loc[df["VWAP_D"] < df["Close"], "entrysignal" ]= 1 
-df.loc[df["VWAP_D"] < df["High"], "entrysignal" ]= 2 
+df.loc[df["Close"] > df["VWAP_D"], "entrysignal" ]= 1 
+df.loc[df["High"] > df["VWAP_D"], "entrysignal" ]= 2 
 print(df)
 
 # Define the conditions for short trades
@@ -136,59 +136,7 @@ def trading_bot(df):
             positions = bybit.fetch_positions()
             #print(f"{positions}information")
     
-            for position in positions:
-                if abs(position['contracts']) > 0:
-                    
-
-                    ids = position['id']
-                    symbol = position['symbol']
-                    entryPrice = position['entryPrice']
-                    amount = position['contracts']
-                    
-                    print(f"{symbol} and {entryPrice}, {amount}")
-                    
-                    if position['unrealizedPnl'] is None or position['initialMargin'] is None:
-                        print("Skipping position pnl due to value being zero")
-                        continue
-                    
-                    #pnl = position['unrealizedPnl'] / position['initialMargin'] * 100
-                    pnl = position['unrealizedPnl'] * 100
-
-                    
-                    print(f"pnl {pnl} percent")
-                    
-                     #6X LEVERAGAE stopless = 2.39 X 6= and tp= 3.62 x 6= 20.34  
-                    if pnl <= -23.8 or pnl >=  35.6:
-                    #print(f"Closing position for {symbol} with PnL: {pnl}%")
-                    
-                        print(f"Closing position for {symbol} with PnL: {pnl}%")
-                    
-                        response = session.get_positions(
-                            category="linear",
-                            symbol="AAVEUSDT",
-                        )
-                        print(f"{response}information")
-                        positions = response['result']['list']
-                        for position in positions:
-                            unrealized_pnl = position['unrealisedPnl']
-                            size = position['size']
-                            
-                            side = 'Buy'
-                            symbol = position['symbol']
-                            order = session.place_order(
-                                category="linear",
-                                symbol=symbol,
-                                side=side,
-                                orderType="Market",
-                                qty=size,
-                                timeInForce="GTC",
-                            )
-                            
-                            
-                        print(f"long order placed: {order}")
-                        if order:
-                            print(f"Position closed: {order}")
-                    
+            
                 
             time.sleep(30)
 
