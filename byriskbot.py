@@ -4,10 +4,9 @@ import schedule
 import pandas as pd
 from pybit.unified_trading import HTTP
 
-
 bybit = ccxt.bybit({
-    'apiKey': 'i1UQddbDArbewF1ETS',
-    'secret': 'VHyrOH6gKFjyyPf3zkceaNskQOEWM1Vj63bP',
+    'apiKey': 'LQLW7aAhcalaYMAiUe',
+    'secret': 'X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD',
     'enableRateLimit': True,
     'options': {
         'defaultType': 'future',
@@ -15,20 +14,16 @@ bybit = ccxt.bybit({
     }
 })
 
-
-
-
-
-api_key = "i1UQddbDArbewF1ETS"
-api_secret = "VHyrOH6gKFjyyPf3zkceaNskQOEWM1Vj63bP"
+api_key = "LQLW7aAhcalaYMAiUe"
+api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
 
 session = HTTP(
     api_key=api_key,
     api_secret=api_secret,
-    testnet= True,
+    testnet= False,
 )
 
-bybit.set_sandbox_mode(True) # activates testnet mode
+#bybit.set_sandbox_mode(True) # activates testnet mode
 bybit.options["dafaultType"] = 'future'
 bybit.load_markets()
 

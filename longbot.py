@@ -28,7 +28,6 @@ session = HTTP(
     api_secret=api_secret,
     testnet= False,
 )
-
 #bybit.set_sandbox_mode(True) # activates testnet mode
 
 #bybit future contract enable
