@@ -11,20 +11,17 @@ import schedule
 from pybit.unified_trading import HTTP
 
 bybit = ccxt.bybit({
-    'apiKey': '',
-    'secret': '',
+    'apiKey': 'LQLW7aAhcalaYMAiUe',
+    'secret': 'X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD',
     'enableRateLimit': True,
     'options': {
         'defaultType': 'future',
         'adjustForTimeDifference': True
     }
-
 })
 
-
-# Create direct HTTP session instance
-api_key = ""
-api_secret = ""
+api_key = "LQLW7aAhcalaYMAiUe"
+api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
 
 session = HTTP(
     api_key=api_key,
@@ -32,25 +29,28 @@ session = HTTP(
     testnet= False,
 )
 
-
 #bybit.set_sandbox_mode(True) # activates testnet mode
+
 #bybit future contract enable
 bybit.options["dafaultType"] = 'future'
+#load market
 bybit.load_markets()
+
+#get future account balance
 def get_balance():
     params ={'type':'swap', 'code':'USDT'}
     account = bybit.fetch_balance(params)['USDT']['total']
     print(account)
 get_balance()
-#stoploss
 
 
 
-#Step 4: Fetch historical data
-symbol = 'AXS/USDT'
+
+#Fetch historical data
+symbol = 'AAVE/USDT'
 amount = 0.7 
 type = 'market'
-timeframe = '30m'
+timeframe = '1h'
 limit = 200
 ohlcv = bybit.fetch_ohlcv(symbol, timeframe)
 
@@ -62,33 +62,55 @@ print(df)
 # Step 5: Calculate technical indicators
 
 #df.ta.ema(length=20, append=True)
-a = ta.adx(df['High'], df['Low'], df['Close'], length = 14)
-df = df.join(a)
-#print(df)
-df.ta.ema(length=11, append=True)
-df.ta.ema(length=200, append=True)
-df.ta.ema(length=50, append=True)
+
 df.ta.ema(length=100, append=True)
+df.ta.ema(length=21, append=True)
+df.ta.ema(length=50, append=True)
 df.ta.vwap(append=True)
-
-
-
-
+df.ta.vwma(length=21, append=True)
 
 print(df)
+
 # Define the conditions for short and long trades
-# close above ema200 but less than ema100 or ema 50, pullback close above ema 21, 11 or 9
+#signal
+df["signal"] = 0
+df.loc[(df["VWAP_D"] > df["EMA_50"]) & (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
 
-long_condition = ((df["Close"] > df["EMA_200"])& (df["Close"] < df["EMA_100"])& (df["Close"] < df["EMA_11"]) & (df["Close"] < df["EMA_50"]) & (df["Close"] < df["VWAP_D"])& (df["EMA_50"] < df["VWAP_D"]) & (df["ADX_14"] > 23.4))
+df.loc[(df["VWAP_D"] < df["EMA_50"]) & (df["Close"] < df["EMA_50"]) & (df["Close"] < df["EMA_100"]), "signal" ]= 2 #sell
+print(df)
+#revesalsignal
+df["revesalsignal"] = 0
 
-long_trades = df.loc[long_condition]
-#print(long_trades)
-# Define the conditions for short and long trades
 
-#short_condition = ((df["Close"] < df["EMA_9"]) & (df["Close"] < df["VWAP_D"]) & (df["ADX_14"] > 25))
+df.loc[df["VWAP_D"] > df["VWMA_21"], "revesalsignal" ]= 1 #end of reversal
+df.loc[df["VWAP_D"] < df["VWMA_21"], "revesalsignal" ]= 2 #inside reversal
+print(df)
+
+
+#entry signal
+df["entrysignal"] = 0
+
+#in a downtrend 
+df.loc[df["Close"] < df["VWAP_D"], "entrysignal" ]= 1 
+df.loc[df["Low"] < df["VWAP_D"], "entrysignal" ]= 2 
+print(df)
+
+
+# Define the conditions for short trades
+
+long_condition= ((df["entrysignal"] >= 1 ) & (df["signal"] == 1) & (df["revesalsignal"] == 1)) 
+
+
 
 
 # Filter the DataFrame based on the conditions
+
+long_trades = df.loc[long_condition]
+#print(long_trades)
+
+#vwap start after 2 hours
+
+
 
 
 
@@ -99,22 +121,24 @@ def trading_bot(df):
 
         positions = bybit.fetch_positions()
 
-        check_positions = [position for position in positions if 'AXS' in position['symbol']]
+        sol_positions = [position for position in positions if 'AAVE' in position['symbol']]
         print(f"open position {positions}")
-        openorder = bybit.fetch_open_orders(symbol='AXS/USDT')
+        openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
 
         
-        if not check_positions:
+        if not sol_positions:
             # Step 6: Implement the trading strategy
             for i, row in df.iterrows():
+
                 
                 if not long_trades.empty:
+                    
                     response = session.place_order(
                         category="linear",
-                        symbol="AXSUSDT",
-                        side="Sell",
+                        symbol="AAVEUSDT",
+                        side="Buy",
                         orderType="Market",
-                        qty="1.3",
+                        qty="0.1",
                         timeInForce="GTC",
                     )
                     
@@ -163,17 +187,14 @@ def trading_bot(df):
                     print(f"pnl {pnl} percent")
                     
                         
-                    if pnl <= -15 or pnl >= 29:
+                    if pnl <= -23.8 or pnl >=  35.6:
                     #print(f"Closing position for {symbol} with PnL: {pnl}%")
                     
                         print(f"Closing position for {symbol} with PnL: {pnl}%")
-                    
-                    
-                
-                        
+                       
                         response = session.get_positions(
                             category="linear",
-                            symbol="AXSUSDT",
+                            symbol="AAVEUSDT",
                         )
                         print(f"{response}information")
                         positions = response['result']['list']
@@ -181,7 +202,7 @@ def trading_bot(df):
                             unrealized_pnl = position['unrealisedPnl']
                             size = position['size']
                             
-                            side = 'Buy'
+                            side = 'Sell'
                             symbol = position['symbol']
                             order = session.place_order(
                                 category="linear",
@@ -198,7 +219,7 @@ def trading_bot(df):
                             print(f"Position closed: {order}")
                     
                 
-            time.sleep(20)
+            time.sleep(30)
 
     except ccxt.RequestTimeout as e:
         print(f"A request timeout occurred: {e}")
@@ -223,5 +244,5 @@ schedule.every(1).minutes.do(trading_bot, df)
 # Call the trading_bot function every 2 minutes
 while True:
     schedule.run_pending()
-    time.sleep(10)
+    time.sleep(20)
 
