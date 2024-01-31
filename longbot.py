@@ -45,69 +45,7 @@ get_balance()
 
 
 
-#Fetch historical data
-symbol = 'AAVE/USDT'
-amount = 0.7 
-type = 'market'
-timeframe = '1h'
-limit = 200
-ohlcv = bybit.fetch_ohlcv(symbol, timeframe)
 
-# Convert the data into a pandas DataFrame for easy manipulation
-df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
-df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
-df.set_index('Timestamp', inplace=True)
-print(df)
-# Step 5: Calculate technical indicators
-
-#df.ta.ema(length=20, append=True)
-
-df.ta.ema(length=100, append=True)
-df.ta.ema(length=21, append=True)
-df.ta.ema(length=50, append=True)
-df.ta.vwap(append=True)
-df.ta.vwma(length=21, append=True)
-
-print(df)
-
-# Define the conditions for short and long trades
-#signal
-df["signal"] = 0
-df.loc[(df["VWAP_D"] > df["EMA_50"]) & (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
-
-df.loc[(df["VWAP_D"] < df["EMA_50"]) & (df["Close"] < df["EMA_50"]) & (df["Close"] < df["EMA_100"]), "signal" ]= 2 #sell
-print(df)
-#revesalsignal
-df["revesalsignal"] = 0
-
-
-df.loc[df["VWAP_D"] > df["VWMA_21"], "revesalsignal" ]= 1 #end of reversal
-df.loc[df["VWAP_D"] < df["VWMA_21"], "revesalsignal" ]= 2 #inside reversal
-print(df)
-
-
-#entry signal
-df["entrysignal"] = 0
-
-#in a downtrend 
-df.loc[df["Close"] < df["VWAP_D"], "entrysignal" ]= 1 
-df.loc[df["Low"] < df["VWAP_D"], "entrysignal" ]= 2 
-print(df)
-
-
-# Define the conditions for short trades
-
-long_condition= ((df["entrysignal"] >= 1 ) & (df["signal"] == 1) & (df["revesalsignal"] == 1)) 
-
-
-
-
-# Filter the DataFrame based on the conditions
-
-long_trades = df.loc[long_condition]
-#print(long_trades)
-
-#vwap start after 2 hours
 
 
 
@@ -115,13 +53,75 @@ long_trades = df.loc[long_condition]
 
 # Step 3: Define the trading bot function
 
-def trading_bot(df):
+def trading_bot():
+    #Fetch historical data
+    symbol = 'AAVE/USDT'
+    amount = 0.7 
+    type = 'market'
+    timeframe = '1h'
+    limit = 200
+    ohlcv = bybit.fetch_ohlcv(symbol, timeframe)
+
+    # Convert the data into a pandas DataFrame for easy manipulation
+    df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+    df.set_index('Timestamp', inplace=True)
+    print(df)
+    # Step 5: Calculate technical indicators
+
+    #df.ta.ema(length=20, append=True)
+
+    df.ta.ema(length=100, append=True)
+    df.ta.ema(length=21, append=True)
+    df.ta.ema(length=50, append=True)
+    df.ta.vwap(append=True)
+    df.ta.vwma(length=21, append=True)
+
+    print(df)
+
+    # Define the conditions for short and long trades
+    #signal
+    df["signal"] = 0
+    df.loc[(df["VWAP_D"] > df["EMA_50"]) & (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
+
+    df.loc[(df["VWAP_D"] < df["EMA_50"]) & (df["Close"] < df["EMA_50"]) & (df["Close"] < df["EMA_100"]), "signal" ]= 2 #sell
+    print(df)
+    #revesalsignal
+    df["revesalsignal"] = 0
+
+
+    df.loc[df["VWAP_D"] > df["VWMA_21"], "revesalsignal" ]= 1 #end of reversal
+    df.loc[df["VWAP_D"] < df["VWMA_21"], "revesalsignal" ]= 2 #inside reversal
+    print(df)
+
+
+    #entry signal
+    df["entrysignal"] = 0
+
+    #in a downtrend 
+    df.loc[df["Close"] < df["VWAP_D"], "entrysignal" ]= 1 
+    df.loc[df["Low"] < df["VWAP_D"], "entrysignal" ]= 2 
+    print(df)
+
+
+    # Define the conditions for short trades
+
+    long_condition= ((df["entrysignal"] >= 1 ) & (df["signal"] == 1) & (df["revesalsignal"] == 1)) 
+
+
+
+
+    # Filter the DataFrame based on the conditions
+
+    long_trades = df.loc[long_condition]
+    #print(long_trades)
+
     try:
 
         positions = bybit.fetch_positions()
 
         sol_positions = [position for position in positions if 'AAVE' in position['symbol']]
-        print(f"open position {positions}")
+        #print(f"open position {positions}")
         openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
 
         
@@ -179,9 +179,9 @@ def trading_bot(df):
         # Handle all other unexpected errors
 
 # Run the trading_bot function
-trading_bot(df)
+trading_bot()
 
-schedule.every(1).minutes.do(trading_bot, df)
+schedule.every(1).minutes.do(trading_bot)
 # Call the trading_bot function every 2 minutes
 while True:
     schedule.run_pending()
