@@ -130,7 +130,7 @@ def trading_bot():
             for i, row in df.iterrows():
 
                 
-                if not long_trades.empty:
+                if long_trades.empty:
                     
                     response = session.place_order(
                         category="linear",

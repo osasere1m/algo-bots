@@ -89,7 +89,7 @@ def trading_bot():
 
     # Define the conditions for short trades
 
-    short_condition= ((df["entrysignal"] >= 1 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2)) 
+    short_condition= ((df["entrysignal"] == 2 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2)) 
 
 
 
@@ -103,14 +103,14 @@ def trading_bot():
         print(positions)
         check_positions = [position for position in positions if 'AAVE' in position['symbol']]
         #print(f"open position {positions}")
-        openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
+        #openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
 
         
         if not check_positions:
             # Step 6: Implement the trading strategy
             for i, row in df.iterrows():
                 
-                if not short_trades.empty:
+                if short_trades.empty:
                     
                     response = session.place_order(
                         category="linear",
@@ -122,8 +122,8 @@ def trading_bot():
                     )
                     
                     
-                    print(f"short order placed: {response}")
-                    #print(f"short order placed:")
+                    #print(f"short order placed: {response}")
+                    print(f"short order placed:")
                     time.sleep(60)
                     break
                 
