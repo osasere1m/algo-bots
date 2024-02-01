@@ -88,15 +88,17 @@ def trading_bot():
     print(df)
 
     # Define the conditions for short trades
+    
+    df["short_condition"] = 0
 
-    short_condition= ((df["entrysignal"] == 2 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2)) 
-
+    df.loc[(df["entrysignal"] == 2 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2),"short_condition" ] = 1
+    #short_condition= ((df["entrysignal"] == 2 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2)) 
 
 
     # Filter the DataFrame based on the conditions
-    short_trades = df.loc[short_condition]
+    #short_trades = df.loc[short_condition]
+    
     print(df)
-
     try:
 
         positions = bybit.fetch_positions()
@@ -110,8 +112,15 @@ def trading_bot():
             # Step 6: Implement the trading strategy
             for i, row in df.iterrows():
                 
-                if short_trades.empty:
+                
+                if df["short_condition"].empty:
+                    print(f"checking for short signals")
                     
+                    time.sleep(60)
+                    break
+                    
+                   
+                else:
                     response = session.place_order(
                         category="linear",
                         symbol="AAVEUSDT",
@@ -122,18 +131,11 @@ def trading_bot():
                     )
                     
                     
-                    #print(f"short order placed: {response}")
-                    print(f"short order placed:")
+                    print(f"short order placed: {response}")
+                    #print(f"short order placed:")
                     time.sleep(60)
                     break
-                
-                        
-                   
-                else:
-                    print(f"checking for short signals")
                     
-                    time.sleep(60)
-                    break
         else:
             print("There is already an open position.")
             positions = bybit.fetch_positions()
@@ -158,7 +160,6 @@ def trading_bot():
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
         # Handle all other unexpected errors
-
 # Run the trading_bot function
 trading_bot()
 

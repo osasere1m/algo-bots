@@ -105,19 +105,18 @@ def trading_bot():
 
 
     # Define the conditions for short trades
-
-    long_condition= ((df["entrysignal"] >= 1 ) & (df["signal"] == 1) & (df["revesalsignal"] == 1)) 
+    df["long_condition"] = 0
+    df.loc[(df["entrysignal"] >= 1 ) & (df["signal"] == 1) & (df["revesalsignal"] == 1), "long_condition"] = 1
 
 
 
 
     # Filter the DataFrame based on the conditions
 
-    long_trades = df.loc[long_condition]
     #print(long_trades)
 
     try:
-
+        # Check if there is an open trade position
         positions = bybit.fetch_positions()
 
         sol_positions = [position for position in positions if 'AAVE' in position['symbol']]
@@ -129,9 +128,16 @@ def trading_bot():
             # Step 6: Implement the trading strategy
             for i, row in df.iterrows():
 
-                
-                if long_trades.empty:
+                 # Step 7: Check for signals and execute trades
+                if df["long_condition"].empty:
+                    print(f"checking for long signals")
                     
+                    time.sleep(60)
+                    break
+                    
+                
+                else:
+                    # If there is no open position, place a limit order to enter the trade at the current market price
                     response = session.place_order(
                         category="linear",
                         symbol="AAVEUSDT",
@@ -146,17 +152,7 @@ def trading_bot():
                     #print(f"long order placed:")
                     time.sleep(60)
                     break
-                
-                        
-                    # Step 7: Check for signals and execute trades
-                    # Check if there is an open trade position
-                    # If there is no open position, place a limit order to enter the trade at the current market price
-                    #pass
-                else:
-                    print(f"checking for long signals")
                     
-                    time.sleep(60)
-                    break
         else:
             print("There is already an open position.")
             
