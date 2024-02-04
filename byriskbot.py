@@ -1,7 +1,7 @@
 import ccxt
 import time
 import schedule
-import pandas as pd
+
 from pybit.unified_trading import HTTP
 
 bybit = ccxt.bybit({

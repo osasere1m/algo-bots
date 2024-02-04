@@ -89,9 +89,9 @@ def trading_bot():
 
     # Define the conditions for short trades
     
-    df["short_condition"] = 0
+    df["short_condition"] = 1
 
-    df.loc[(df["entrysignal"] == 2 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2),"short_condition" ] = 1
+    df.loc[(df["entrysignal"] == 2 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2),"short_condition" ] = 2
     #short_condition= ((df["entrysignal"] == 2 ) & (df["signal"] == 2) & (df["revesalsignal"] == 2)) 
 
 
@@ -113,14 +113,9 @@ def trading_bot():
             for i, row in df.iterrows():
                 
                 
-                if df["short_condition"].empty:
-                    print(f"checking for short signals")
+                if df['short_condition'].iloc[-1] > 1:
+
                     
-                    time.sleep(60)
-                    break
-                    
-                   
-                else:
                     response = session.place_order(
                         category="linear",
                         symbol="AAVEUSDT",
@@ -135,6 +130,15 @@ def trading_bot():
                     #print(f"short order placed:")
                     time.sleep(60)
                     break
+                    
+                   
+                else:
+                    print(f"checking for short signals")
+                    
+                    time.sleep(60)
+                    break
+                    
+                    
                     
         else:
             print("There is already an open position.")

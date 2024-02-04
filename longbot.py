@@ -105,11 +105,11 @@ def trading_bot():
 
 
     # Define the conditions for short trades
-    df["long_condition"] = 0
-    df.loc[(df["entrysignal"] >= 1 ) & (df["signal"] == 1) & (df["revesalsignal"] == 1), "long_condition"] = 1
+    df["long_condition"] = 1
+    df.loc[(df["entrysignal"] == 1 ) & (df["signal"] == 1) & (df["revesalsignal"] == 1), "long_condition"] = 2
 
 
-
+    print(df)
 
     # Filter the DataFrame based on the conditions
 
@@ -118,26 +118,20 @@ def trading_bot():
     try:
         # Check if there is an open trade position
         positions = bybit.fetch_positions()
-
-        sol_positions = [position for position in positions if 'AAVE' in position['symbol']]
+        print(positions)
+        check_positions = [position for position in positions if 'AAVE' in position['symbol']]
         #print(f"open position {positions}")
-        openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
+        #openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
 
         
-        if not sol_positions:
+        if not check_positions:
             # Step 6: Implement the trading strategy
             for i, row in df.iterrows():
 
                  # Step 7: Check for signals and execute trades
-                if df["long_condition"].empty:
-                    print(f"checking for long signals")
-                    
-                    time.sleep(60)
-                    break
-                    
-                
-                else:
-                    # If there is no open position, place a limit order to enter the trade at the current market price
+                if df['short_condition'].iloc[-1] > 1:
+
+                     
                     response = session.place_order(
                         category="linear",
                         symbol="AAVEUSDT",
@@ -152,6 +146,16 @@ def trading_bot():
                     #print(f"long order placed:")
                     time.sleep(60)
                     break
+
+                   
+                
+                else:
+                    print(f"checking for long signals")
+                
+                    time.sleep(60)
+                    break
+                        
+                   
                     
         else:
             print("There is already an open position.")
