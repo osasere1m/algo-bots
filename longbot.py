@@ -129,7 +129,7 @@ def trading_bot():
             for i, row in df.iterrows():
 
                  # Step 7: Check for signals and execute trades
-                if df['short_condition'].iloc[-1] > 1:
+                if df['long_condition'].iloc[-1] > 1:
 
                      
                     response = session.place_order(
