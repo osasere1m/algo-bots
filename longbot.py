@@ -55,7 +55,7 @@ get_balance()
 
 def trading_bot():
     #Fetch historical data
-    symbol = 'AAVE/USDT'
+    symbol = 'RNDR/USDT'
     amount = 0.7 
     type = 'market'
     timeframe = '1h'
@@ -119,9 +119,9 @@ def trading_bot():
         # Check if there is an open trade position
         positions = bybit.fetch_positions()
         print(positions)
-        check_positions = [position for position in positions if 'AAVE' in position['symbol']]
+        check_positions = [position for position in positions if 'RNDR' in position['symbol']]
         #print(f"open position {positions}")
-        #openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
+        #openorder = bybit.fetch_open_orders(symbol='RNDR/USDT')
 
         
         if not check_positions:
@@ -134,10 +134,10 @@ def trading_bot():
                      
                     response = session.place_order(
                         category="linear",
-                        symbol="AAVEUSDT",
+                        symbol="RNDRUSDT",
                         side="Buy",
                         orderType="Market",
-                        qty="0.1",
+                        qty="2",
                         timeInForce="GTC",
                     )
                     

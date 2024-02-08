@@ -121,7 +121,7 @@ def trading_bot():
                         symbol="AAVEUSDT",
                         side="Sell",
                         orderType="Market",
-                        qty="0.1",
+                        qty="2",
                         timeInForce="GTC",
                     )
                     
