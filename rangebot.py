@@ -1,6 +1,7 @@
-# risk managment 1.47 = stoploss = 0.4 multiplied by leverage(10) = 4 percent takeprofit = 0.65* 10 = 6.5
-# idea close below ema 50 short the close or high above ema20 with stochastic greater 70 and adx above 25
-#idea long close above ema 50 and close or high below ema20 with stochastic greater 24 and adx above 25
+#  check adx in hft time 4 hr if greater than 25
+# use stockcastic rsi in lower ft 30 or 1 hr
+
+
 
 import ccxt
 import pandas as pd
@@ -54,10 +55,27 @@ get_balance()
 # Step 3: Define the trading bot function
 
 def trading_bot():
-    #Fetch historical data
-    symbol = 'RNDR/USDT'
+    #Fetch historical data for hft 
+
+    hft_symbol = 'RNDR/USDT'
     amount = 0.7 
     type = 'market'
+    hft_timeframe = '4h'
+    limit = 200
+    ohlcv = bybit.fetch_ohlcv(symbol=hft_symbol, timeframe= hft_timeframe)
+
+    # Convert the data into a pandas DataFrame for easy manipulation
+    df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
+    df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+    df.set_index('Timestamp', inplace=True)
+    print(df)
+    a = ta.adx(df['high'], df['low'], df['close'], length = 14)
+    df = df.join(a, append=True)
+    print(df)
+
+
+    symbol = 'RNDR/USDT'
+    
     timeframe = '1h'
     limit = 200
     ohlcv = bybit.fetch_ohlcv(symbol, timeframe)
@@ -71,18 +89,16 @@ def trading_bot():
 
     #df.ta.ema(length=20, append=True)
 
-    df.ta.ema(length=100, append=True)
-    df.ta.ema(length=21, append=True)
-    df.ta.ema(length=50, append=True)
-    df.ta.vwap(append=True)
-    df.ta.vwma(length=21, append=True)
+    
+    df.ta.stochrsi(length=14, append=True)
+    
 
     print(df)
 
     # Define the conditions for short and long trades
     #signal
     df["signal"] = 0
-    df.loc[(df["VWAP_D"] > df["EMA_50"]) & (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
+    df.loc[(df["ADX_14"] > df["EMA_50"]) & (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
 
     df.loc[(df["VWAP_D"] < df["EMA_50"]) & (df["Close"] < df["EMA_50"]) & (df["Close"] < df["EMA_100"]), "signal" ]= 2 #sell
     print(df)
