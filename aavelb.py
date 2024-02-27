@@ -10,55 +10,27 @@ import time
 import schedule
 from pybit.unified_trading import HTTP
 
-bybit = ccxt.bybit({
-    'apiKey': 'LQLW7aAhcalaYMAiUe',
-    'secret': 'X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD',
-    'enableRateLimit': True,
-    'options': {
-        'defaultType': 'future',
-        'adjustForTimeDifference': True
-    }
-})
-
-api_key = "LQLW7aAhcalaYMAiUe"
-api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
-
-session = HTTP(
-    api_key=api_key,
-    api_secret=api_secret,
-    testnet= False,
-)
-#bybit.set_sandbox_mode(True) # activates testnet mode
-
-#bybit future contract enable
-bybit.options["dafaultType"] = 'future'
-#load market
-bybit.load_markets()
-
-#get future account balance
-def get_balance():
-    params ={'type':'swap', 'code':'USDT'}
-    account = bybit.fetch_balance(params)['USDT']['total']
-    print(account)
-get_balance()
-
-
-
-
-
-
-
 
 
 
 # Step 3: Define the trading bot function
 
 def trading_bot():
+    bybit = ccxt.bybit()
+
+    api_key = "LQLW7aAhcalaYMAiUe"
+    api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
+
+    session = HTTP(
+        api_key=api_key,
+        api_secret=api_secret,
+        testnet= False,
+    )
     #Fetch historical data
     symbol = 'AAVE/USDT'
     amount = 0.7 
     type = 'market'
-    timeframe = '1h'
+    timeframe = '4h'
     limit = 200
     ohlcv = bybit.fetch_ohlcv(symbol, timeframe)
 
@@ -72,35 +44,34 @@ def trading_bot():
     #df.ta.ema(length=20, append=True)
 
     df.ta.ema(length=100, append=True)
-    df.ta.ema(length=21, append=True)
+    #df.ta.ema(length=21, append=True)
+    df.ta.sma(length=12, append=True)
     df.ta.ema(length=50, append=True)
-    df.ta.vwap(append=True)
-    df.ta.vwma(length=21, append=True)
+    
 
     print(df)
 
     # Define the conditions for short and long trades
     #signal
     df["signal"] = 0
-    df.loc[(df["VWAP_D"] > df["EMA_50"]) & (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
+    df.loc[(df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
 
-    df.loc[(df["VWAP_D"] < df["EMA_50"]) & (df["Close"] < df["EMA_50"]) & (df["Close"] < df["EMA_100"]), "signal" ]= 2 #sell
+    
     print(df)
     #revesalsignal
     df["revesalsignal"] = 0
 
+    df.loc[(df["SMA_12"] > df["EMA_50"]), "revesalsignal" ]= 1 #outside reversal
+    df.loc[(df["SMA_12"] < df["EMA_50"]), "revesalsignal" ]= 2 #inside reversal
 
-    df.loc[df["VWAP_D"] > df["VWMA_21"], "revesalsignal" ]= 1 #end of reversal
-    df.loc[df["VWAP_D"] < df["VWMA_21"], "revesalsignal" ]= 2 #inside reversal
     print(df)
 
 
     #entry signal
     df["entrysignal"] = 0
-
-    #in a downtrend 
-    df.loc[df["Close"] < df["VWAP_D"], "entrysignal" ]= 1 
-    df.loc[df["Low"] < df["VWAP_D"], "entrysignal" ]= 2 
+ 
+    df.loc[df["Close"] < df["SMA_12"], "entrysignal" ]= 1 
+    #df.loc[df["Low"] < df["SMA_12"], "entrysignal" ]= 2 
     print(df)
 
 
@@ -117,21 +88,27 @@ def trading_bot():
 
     try:
         # Check if there is an open trade position
-        positions = bybit.fetch_positions()
+        response = session.get_positions(
+        category="linear",
+        symbol="AAVEUSDT",
+
+        )
+        #print(response)
+        positions = response["result"]["list"]
+    
         print(positions)
-        check_positions = [position for position in positions if 'AAVE' in position['symbol']]
-        #print(f"open position {positions}")
-        #openorder = bybit.fetch_open_orders(symbol='RNDR/USDT')
+        check_positions = [position for position in positions if '0' in position['size']]
+        
 
         
-        if not check_positions:
+        if check_positions:
             # Step 6: Implement the trading strategy
             for i, row in df.iterrows():
 
                  # Step 7: Check for signals and execute trades
-                if df['long_condition'].iloc[-1] > 1:
+                if df['long_condition'].iloc[-1] == 2:
 
-                     
+                    
                     response = session.place_order(
                         category="linear",
                         symbol="AAVEUSDT",
@@ -143,6 +120,7 @@ def trading_bot():
                     
                     
                     print(f"long order placed: {response}")
+                    
                     #print(f"long order placed:")
                     time.sleep(60)
                     break
@@ -159,24 +137,60 @@ def trading_bot():
                     
         else:
             print("There is already an open position.")
+            positions = response["result"]["list"]
+            for position in positions :
+                symbol =positions['symbol']
+                unrealised =float (positions['unrealisedPnl'])
+                positionim = float(positions['positionBalance'])
+                if positions['unrealisedPnl'] is None or positions['positionIM'] is None:
+                    print("Skipping position pnl due to value being zero")
+                    continue
+                pnl = (unrealised/ positionim )* 100
+                print(pnl)
+                print(f"pnl {pnl} percent")
+                            #10 x leverage= tp =1.02 and sl=0.71
+                    
+
+                if pnl <= -14.4 or pnl >= 22:
+                    print(f"Closing position for {symbol} with PnL: {pnl}%")
+                    positions['size']
+                    if positions['side'] == 'Sell':
+                        side = 'Buy'
+                        symbol =positions['symbol']
+                        size =positions['size']
+                        response = session.place_order(
+                            category="linear",
+                            symbol=symbol,
+                            side=side,
+                            orderType="Market",
+                            qty=size,
+                            timeInForce="GTC",
+                        )
+                        
+                        if response:
+                            print(f"Position closed: {positions}")
+                    else:
+                        side = 'Sell'
+                        symbol =positions['symbol']
+                        size =positions['size']
+                        response = session.place_order(
+                            category="linear",
+                            symbol=symbol,
+                            side=side,
+                            orderType="Market",
+                            qty=size,
+                            timeInForce="GTC",
+                        )
+                        if response:
+                            print(f"Position closed: {positions}")
+                else:
+                    pass
             
-            time.sleep(30)
+            
 
-    except ccxt.RequestTimeout as e:
-        print(f"A request timeout occurred: {e}")
-        # Handle request timeout error
-
-    except ccxt.AuthenticationError as e:
-        print(f"An authentication error occurred: {e}")
-        # Handle authentication error
-
-    except ccxt.ExchangeError as e:
-        print(f"An exchange error occurred: {e}")
-        # Handle exchange error
-
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        # Handle all other unexpected errors
+    except TypeError:
+        print(f"An unexpected error occurred: ")
+        pass
 
 # Run the trading_bot function
 trading_bot()

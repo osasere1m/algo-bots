@@ -74,7 +74,7 @@ def trading_bot():
     df.ta.ema(length=100, append=True)
     df.ta.ema(length=21, append=True)
     df.ta.ema(length=50, append=True)
-    df.ta.vwap(append=True)
+    #df.ta.vwap(append=True)
     df.ta.vwma(length=21, append=True)
 
     print(df)
@@ -82,9 +82,9 @@ def trading_bot():
     # Define the conditions for short and long trades
     #signal
     df["signal"] = 0
-    df.loc[(df["VWAP_D"] > df["EMA_50"]) & (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
+    df.loc[ (df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
 
-    df.loc[(df["VWAP_D"] < df["EMA_50"]) & (df["Close"] < df["EMA_50"]) & (df["Close"] < df["EMA_100"]), "signal" ]= 2 #sell
+    df.loc[(df["Close"] < df["EMA_50"]) & (df["Close"] < df["EMA_100"]), "signal" ]= 2 #sell
     print(df)
     #revesalsignal
     df["revesalsignal"] = 0

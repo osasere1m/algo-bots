@@ -1,8 +1,12 @@
 import ccxt
 import time
 import schedule
+import time
+import sys
+import os
 
-from pybit.unified_trading import HTTP
+
+
 
 bybit = ccxt.bybit({
     'apiKey': 'LQLW7aAhcalaYMAiUe',
@@ -17,11 +21,7 @@ bybit = ccxt.bybit({
 api_key = "LQLW7aAhcalaYMAiUe"
 api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
 
-session = HTTP(
-    api_key=api_key,
-    api_secret=api_secret,
-    testnet= False,
-)
+
 
 #bybit.set_sandbox_mode(True) # activates testnet mode
 bybit.options["dafaultType"] = 'future'
@@ -72,7 +72,7 @@ def kill_switch():
                 #10 x leverage= tp =1.02 and sl=0.71
         
 
-                if pnl <= -14.4 or pnl >= 21:
+                if pnl <= -14.4 or pnl >= 22:
                     print(f"Closing position for {symbol} with PnL: {pnl}%")
                 
                     if position['side'] == 'short':
@@ -85,7 +85,10 @@ def kill_switch():
                         order = bybit.create_market_sell_order(symbol=symbol, amount=amount)
                         if order:
                             print(f"Position closed: {order}")
-
+                else:
+                    pass
+            else:
+                pass
 
     except ccxt.RequestTimeout as e:
         print(f"A request timeout occurred: {e}")
@@ -102,6 +105,9 @@ kill_switch()
 #schedule.every(20).seconds.do(kill_switch)
 
 while True:
+    
+
     kill_switch()
     time.sleep(20)
+    
     

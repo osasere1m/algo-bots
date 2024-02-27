@@ -23,9 +23,9 @@ session = HTTP(
 
 
 def trading_bot():
-    #Step 4: Fetch historical data
-    symbol = 'AAVE/USDT'
-    #amount = 0.7 
+    
+    symbol = 'AAVEUSDT'
+    
     type = 'market'
     timeframe = '1h'
     limit = 200
@@ -79,71 +79,57 @@ def trading_bot():
     
     print(df)
     
-    try:
+    
+    positions = session.get_positions(
+        category="linear",
+        symbol= symbol,
+    )
 
-        positions = bybit.fetch_positions()
-        print(positions)
-        check_positions = [position for position in positions if 'AAVE' in position['symbol']]
-        #print(f"open position {positions}")
-        #openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
+    print(positions)
+    check_positions = [position for position in positions if 'AAVE' in position['symbol']]
+    #print(f"open position {positions}")
+    #openorder = bybit.fetch_open_orders(symbol='AAVE/USDT')
 
         
-        if not check_positions:
-            # Step 6: Implement the trading strategy
-            for i, row in df.iterrows():
-                
-                
-                if df['short_condition'].iloc[-1] > 1:
-
-                    
-                    response = session.place_order(
-                        category="linear",
-                        symbol="AAVEUSDT",
-                        side="Sell",
-                        orderType="Market",
-                        qty="0.1",
-                        timeInForce="GTC",
-                    )
-                    
-                    
-                    print(f"short order placed: {response}")
-                    #print(f"short order placed:")
-                    time.sleep(60)
-                    break
-                    
-                   
-                else:
-                    print(f"checking for short signals")
-                    
-                    time.sleep(60)
-                    break
-                    
-                    
-                    
-        else:
-            print("There is already an open position.")
-            positions = bybit.fetch_positions()
-            #print(f"{positions}information")
-    
+    if not check_positions:
+        # Step 6: Implement the trading strategy
+        for i, row in df.iterrows():
             
+            
+            if df['short_condition'].iloc[-1] > 1:
+
                 
-            time.sleep(30)
+                response = session.place_order(
+                    category="linear",
+                    symbol="AAVEUSDT",
+                    side="Sell",
+                    orderType="Market",
+                    qty="0.1",
+                    timeInForce="GTC",
+                )
+                
+                
+                print(f"short order placed: {response}")
+                #print(f"short order placed:")
+                time.sleep(60)
+                break
+                
+                
+            else:
+                print(f"checking for short signals")
+                
+                time.sleep(60)
+                break
+                
+                
+                
+    else:
+        print("There is already an open position.")
+            
+        time.sleep(30)
 
-    except ccxt.RequestTimeout as e:
-        print(f"A request timeout occurred: {e}")
-        # Handle request timeout error
-
-    except ccxt.AuthenticationError as e:
-        print(f"An authentication error occurred: {e}")
-        # Handle authentication error
-
-    except ccxt.ExchangeError as e:
-        print(f"An exchange error occurred: {e}")
-        # Handle exchange error
-
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
-        # Handle all other unexpected errors
+    
+    
 # Run the trading_bot function
 trading_bot()
 
