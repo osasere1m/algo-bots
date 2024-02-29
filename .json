@@ -1,6 +1,0 @@
-{'retCode': 0, 'retMsg': 'OK', 'result': {'list': [
-            {'positionIdx': 0, 'riskId': 446, 'riskLimitValue': '200000', 'symbol': 'AVAXUSDT', 'side': 'Sell', 'size': '0.1', 'avgPrice': '37.13', 'positionValue': '3.713', 'tradeMode': 1, 'positionStatus': 'Normal', 'autoAddMargin': 0, 'adlRankIndicator': 2, 'leverage': '10', 'positionBalance': '0.37354637', 'markPrice': '35.963', 'liqPrice': '40.100', 'bustPrice': '40.840', 'positionMM': '0.08168', 'positionIM': '0.14852', 'tpslMode': 'Full', 'takeProfit': '0.000', 'stopLoss': '0.000', 'trailingStop': '0.000', 'unrealisedPnl': '0.1167', 'cumRealisedPnl': '0.00303793', 'curRealisedPnl': '0.00303793', 'seq': 15810961544, 'isReduceOnly': False, 'mmrSysUpdateTime': '', 'leverageSysUpdatedTime': '', 'sessionAvgPrice': '', 'createdTime': '1700326098623', 'updatedTime': '1708704000035'
-            }
-        ], 'nextPageCursor': '', 'category': 'linear'
-    }, 'retExtInfo': {}, 'time': 1708732275911
-}

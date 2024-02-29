@@ -8,27 +8,41 @@ import pandas_ta as ta
 import numpy
 import time
 import schedule
-from pybit.unified_trading import HTTP
+
+bybit = ccxt.bybit({
+    'apiKey': 'LQLW7aAhcalaYMAiUe',
+    'secret': 'X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD',
+    'enableRateLimit': True,
+    'options': {
+        'defaultType': 'future',
+        'adjustForTimeDifference': True
+    }
+})
 
 
+
+#bybit.set_sandbox_mode(True) # activates testnet mode
+
+#bybit future contract enable
+bybit.options["dafaultType"] = 'future'
+#load market
+bybit.load_markets()
+
+#get future account balance
+def get_balance():
+    params ={'type':'swap', 'code':'USDT'}
+    account = bybit.fetch_balance(params)['USDT']['total']
+    print(account)
+get_balance()
 
 
 # Step 3: Define the trading bot function
 
 def trading_bot():
-    bybit = ccxt.bybit()
-
-    api_key = "LQLW7aAhcalaYMAiUe"
-    api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
-
-    session = HTTP(
-        api_key=api_key,
-        api_secret=api_secret,
-        testnet= False,
-    )
+    
     #Fetch historical data
     symbol = 'AAVE/USDT'
-    amount = 0.7 
+    amount = 0.1 
     type = 'market'
     timeframe = '4h'
     limit = 200
@@ -81,49 +95,33 @@ def trading_bot():
 
 
     print(df)
+    
 
-    # Filter the DataFrame based on the conditions
 
-    #print(long_trades)
 
     try:
         # Check if there is an open trade position
-        response = session.get_positions(
-        category="linear",
-        symbol="AAVEUSDT",
-
-        )
-        #print(response)
-        positions = response["result"]["list"]
-    
+        positions = bybit.fetch_positions()
         print(positions)
-        check_positions = [position for position in positions if '0' in position['size']]
+        check_positions = [position for position in positions if 'AVAX' in position['symbol']]
+        #print(f"open position {positions}")
         
 
         
-        if check_positions:
+        if not check_positions:
             # Step 6: Implement the trading strategy
             for i, row in df.iterrows():
 
                  # Step 7: Check for signals and execute trades
-                if df['long_condition'].iloc[-1] == 2:
-
-                    
-                    response = session.place_order(
-                        category="linear",
-                        symbol="AAVEUSDT",
-                        side="Buy",
-                        orderType="Market",
-                        qty="0.1",
-                        timeInForce="GTC",
-                    )
+                if df['long_condition'].iloc[-1] > 1:
+                    order = bybit.create_market_buy_order(symbol=symbol, amount=amount)
+                     
                     
                     
-                    print(f"long order placed: {response}")
-                    
+                    print(f"long order placed: {order}")
                     #print(f"long order placed:")
                     time.sleep(60)
-                    break
+                    pass
 
                    
                 
@@ -131,66 +129,31 @@ def trading_bot():
                     print(f"checking for long signals")
                 
                     time.sleep(60)
-                    break
+                    pass
                         
                    
                     
         else:
             print("There is already an open position.")
-            positions = response["result"]["list"]
-            for position in positions :
-                symbol =positions['symbol']
-                unrealised =float (positions['unrealisedPnl'])
-                positionim = float(positions['positionBalance'])
-                if positions['unrealisedPnl'] is None or positions['positionIM'] is None:
-                    print("Skipping position pnl due to value being zero")
-                    continue
-                pnl = (unrealised/ positionim )* 100
-                print(pnl)
-                print(f"pnl {pnl} percent")
-                            #10 x leverage= tp =1.02 and sl=0.71
-                    
-
-                if pnl <= -14.4 or pnl >= 22:
-                    print(f"Closing position for {symbol} with PnL: {pnl}%")
-                    positions['size']
-                    if positions['side'] == 'Sell':
-                        side = 'Buy'
-                        symbol =positions['symbol']
-                        size =positions['size']
-                        response = session.place_order(
-                            category="linear",
-                            symbol=symbol,
-                            side=side,
-                            orderType="Market",
-                            qty=size,
-                            timeInForce="GTC",
-                        )
-                        
-                        if response:
-                            print(f"Position closed: {positions}")
-                    else:
-                        side = 'Sell'
-                        symbol =positions['symbol']
-                        size =positions['size']
-                        response = session.place_order(
-                            category="linear",
-                            symbol=symbol,
-                            side=side,
-                            orderType="Market",
-                            qty=size,
-                            timeInForce="GTC",
-                        )
-                        if response:
-                            print(f"Position closed: {positions}")
-                else:
-                    pass
             
-            
+            time.sleep(30)
+            pass
 
-    except TypeError:
-        print(f"An unexpected error occurred: ")
-        pass
+    except ccxt.RequestTimeout as e:
+        print(f"A request timeout occurred: {e}")
+        # Handle request timeout error
+
+    except ccxt.AuthenticationError as e:
+        print(f"An authentication error occurred: {e}")
+        # Handle authentication error
+
+    except ccxt.ExchangeError as e:
+        print(f"An exchange error occurred: {e}")
+        # Handle exchange error
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        # Handle all other unexpected errors
 
 # Run the trading_bot function
 trading_bot()

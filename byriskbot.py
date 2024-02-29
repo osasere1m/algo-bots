@@ -18,9 +18,6 @@ bybit = ccxt.bybit({
     }
 })
 
-api_key = "LQLW7aAhcalaYMAiUe"
-api_secret = "X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD"
-
 
 
 #bybit.set_sandbox_mode(True) # activates testnet mode
@@ -46,7 +43,8 @@ get_balance()
 def kill_switch():
     try:
         positions = bybit.fetch_positions()
-        #print(f"{positions}information")
+        print(f"{positions}information")
+        
 
         for position in positions:
             if abs(position['contracts']) > 0:
@@ -80,14 +78,17 @@ def kill_switch():
                         order = bybit.create_market_buy_order(symbol=symbol, amount=amount)
                         if order:
                             print(f"Position closed: {order}")
+                            time.sleep(60)
                     else:
                         side = 'sell'
                         order = bybit.create_market_sell_order(symbol=symbol, amount=amount)
                         if order:
                             print(f"Position closed: {order}")
+                            time.sleep(60)
                 else:
                     pass
             else:
+                print("There is already an open position.")
                 pass
 
     except ccxt.RequestTimeout as e:
@@ -103,11 +104,13 @@ def kill_switch():
 kill_switch()
 
 #schedule.every(20).seconds.do(kill_switch)
-
+schedule.every(1).minutes.do(kill_switch)
+# Call the trading_bot function every 2 minutes
 while True:
-    
+    schedule.run_pending()
 
-    kill_switch()
     time.sleep(20)
     
-    
+
+
+
