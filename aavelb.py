@@ -115,13 +115,12 @@ def trading_bot():
                  # Step 7: Check for signals and execute trades
                 if df['long_condition'].iloc[-1] > 1:
                     order = bybit.create_market_buy_order(symbol=symbol, amount=amount)
-                     
                     
                     
                     print(f"long order placed: {order}")
                     #print(f"long order placed:")
                     time.sleep(60)
-                    pass
+                    break
 
                    
                 
@@ -129,7 +128,7 @@ def trading_bot():
                     print(f"checking for long signals")
                 
                     time.sleep(60)
-                    pass
+                    break
                         
                    
                     
