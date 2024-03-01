@@ -103,7 +103,7 @@ def trading_bot():
         # Check if there is an open trade position
         positions = bybit.fetch_positions()
         print(positions)
-        check_positions = [position for position in positions if 'AVAX' in position['symbol']]
+        check_positions = [position for position in positions if 'AAVE' in position['symbol']]
         #print(f"open position {positions}")
         
 
