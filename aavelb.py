@@ -5,9 +5,10 @@
 import ccxt
 import pandas as pd
 import pandas_ta as ta
-import numpy
 import time
 import schedule
+from pybit.unified_trading import HTTP
+
 
 bybit = ccxt.bybit({
     'apiKey': 'LQLW7aAhcalaYMAiUe',
@@ -18,7 +19,11 @@ bybit = ccxt.bybit({
         'adjustForTimeDifference': True
     }
 })
-
+session = HTTP(
+    testnet=False,
+    api_key="LQLW7aAhcalaYMAiUe",
+    api_secret="X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD",
+)
 
 
 #bybit.set_sandbox_mode(True) # activates testnet mode
@@ -63,7 +68,7 @@ def trading_bot():
     df.ta.ema(length=50, append=True)
     
 
-    print(df)
+    
 
     # Define the conditions for short and long trades
     #signal
@@ -71,14 +76,12 @@ def trading_bot():
     df.loc[(df["Close"] > df["EMA_50"]) & (df["Close"] > df["EMA_100"]), "signal" ]= 1 #buy
 
     
-    print(df)
     #revesalsignal
     df["revesalsignal"] = 0
 
     df.loc[(df["SMA_12"] > df["EMA_50"]), "revesalsignal" ]= 1 #outside reversal
     df.loc[(df["SMA_12"] < df["EMA_50"]), "revesalsignal" ]= 2 #inside reversal
 
-    print(df)
 
 
     #entry signal
@@ -86,7 +89,6 @@ def trading_bot():
  
     df.loc[df["Close"] < df["SMA_12"], "entrysignal" ]= 1 
     #df.loc[df["Low"] < df["SMA_12"], "entrysignal" ]= 2 
-    print(df)
 
 
     # Define the conditions for short trades
@@ -103,7 +105,7 @@ def trading_bot():
         # Check if there is an open trade position
         positions = bybit.fetch_positions()
         print(positions)
-        check_positions = [position for position in positions if 'AVAX' in position['symbol']]
+        check_positions = [position for position in positions if 'AAVE' in position['symbol']]
         #print(f"open position {positions}")
         
 
@@ -114,8 +116,13 @@ def trading_bot():
 
                  # Step 7: Check for signals and execute trades
                 if df['long_condition'].iloc[-1] > 1:
-                    order = bybit.create_market_buy_order(symbol=symbol, amount=amount)
-                    
+                    order = (session.place_order(
+                        category="linear",
+                        symbol=symbol,
+                        side="Buy",
+                        orderType="Market",
+                        qty=0.1,
+                    ))
                     
                     print(f"long order placed: {order}")
                     #print(f"long order placed:")
@@ -135,7 +142,7 @@ def trading_bot():
         else:
             print("There is already an open position.")
             
-            time.sleep(30)
+            time.sleep(60)
             pass
 
     except ccxt.RequestTimeout as e:

@@ -2,8 +2,7 @@ import ccxt
 import time
 import schedule
 import time
-import sys
-import os
+from pybit.unified_trading import HTTP
 
 
 
@@ -18,6 +17,11 @@ bybit = ccxt.bybit({
     }
 })
 
+session = HTTP(
+    testnet=False,
+    api_key="LQLW7aAhcalaYMAiUe",
+    api_secret="X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD",
+)
 
 
 #bybit.set_sandbox_mode(True) # activates testnet mode
@@ -70,26 +74,40 @@ def kill_switch():
                 #10 x leverage= tp =1.02 and sl=0.71
         
 
-                if pnl <= -14.4 or pnl >= 22:
+                if pnl <= -14.4 or pnl >= 24:
                     print(f"Closing position for {symbol} with PnL: {pnl}%")
                 
                     if position['side'] == 'short':
                         side = 'buy'
-                        order = bybit.create_market_buy_order(symbol=symbol, amount=amount)
+                        order = (session.place_order(
+                            category="linear",
+                            symbol=symbol,
+                            side=side,
+                            orderType="Market",
+                            qty=amount,
+                        ))
                         if order:
                             print(f"Position closed: {order}")
                             time.sleep(60)
+                            break
                     else:
                         side = 'sell'
-                        order = bybit.create_market_sell_order(symbol=symbol, amount=amount)
+                        order = (session.place_order(
+                            category="linear",
+                            symbol=symbol,
+                            side=side,
+                            orderType="Market",
+                            qty=amount,
+                        ))
                         if order:
                             print(f"Position closed: {order}")
                             time.sleep(60)
+                            break
                 else:
                     pass
             else:
-                print("There is already an open position.")
-                pass
+                print("There is no open position.")
+                
 
     except ccxt.RequestTimeout as e:
         print(f"A request timeout occurred: {e}")
