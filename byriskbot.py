@@ -55,8 +55,7 @@ def kill_switch():
 
                 ds = position['id']
                 symbol_1 = position['symbol']
-                symbol_2 = 'USDT'
-                symbol = (symbol_1 + symbol_2)
+                
                 print(symbol)
                 entryPrice = position['entryPrice']
                 amount = position['contracts']
@@ -84,7 +83,7 @@ def kill_switch():
                         side = 'buy'
                         order = (session.place_order(
                             category="linear",
-                            symbol=symbol,
+                            symbol="AAVEUSDT",
                             side=side,
                             orderType="Market",
                             qty=amount,
@@ -97,7 +96,7 @@ def kill_switch():
                         side = 'sell'
                         order = (session.place_order(
                             category="linear",
-                            symbol=symbol,
+                            symbol="AAVEUSDT",
                             side=side,
                             orderType="Market",
                             qty=amount,
