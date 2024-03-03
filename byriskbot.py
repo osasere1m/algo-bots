@@ -54,7 +54,7 @@ def kill_switch():
             if abs(position['contracts']) > 0:
 
                 ds = position['id']
-                symbol_1 = position['symbol']
+                symbol = position['symbol']
                 
                 print(symbol)
                 entryPrice = position['entryPrice']
