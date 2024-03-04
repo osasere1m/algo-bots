@@ -51,9 +51,7 @@ def kill_switch():
                 entryPrice = position['entryPrice']
                 amount = position['contracts']
 
-                type = 'market'
-                orderbook = bybit.fetch_l2_order_book(symbol)
-                price = orderbook['asks'][0][0]
+                
 
                 print(f"{symbol} and {entryPrice}, {amount}")
 
@@ -72,8 +70,8 @@ def kill_switch():
                 
                     if position['side'] == 'short':
                         side = 'buy'
-                        order = (session.place_order(
-                            category="linear",
+                        order = bybit.create_market_order(
+                            
                             symbol=symbol,
                             side=side,
                             
@@ -85,12 +83,13 @@ def kill_switch():
                             break
                     else:
                         side = 'sell'
-                        order = (session.place_order(
-                            category="linear",
+                        order = bybit.create_market_order(
+                            
                             symbol=symbol,
                             side=side,
                             
-                            amount=amount,)
+                            amount=amount,
+                        )
                         if order:
                             print(f"Position closed: {order}")
                             time.sleep(60)
