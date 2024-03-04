@@ -2,9 +2,6 @@ import ccxt
 import time
 import schedule
 import time
-from pybit.unified_trading import HTTP
-
-
 
 
 bybit = ccxt.bybit({
@@ -17,16 +14,10 @@ bybit = ccxt.bybit({
     }
 })
 
-session = HTTP(
-    testnet=False,
-    api_key="LQLW7aAhcalaYMAiUe",
-    api_secret="X02KF8x2VVXuXDQmoWAd8TCXx3dS7M7fAaKD",
-)
-
 
 #bybit.set_sandbox_mode(True) # activates testnet mode
 bybit.options["dafaultType"] = 'future'
-bybit.load_markets()
+
 
 def get_balance():
     try:
@@ -78,27 +69,26 @@ def kill_switch():
                     print(f"Closing position for {symbol} with PnL: {pnl}%")
                 
                     if position['side'] == 'short':
-                        side = 'buy'
-                        order = (session.place_order(
-                            category="linear",
+                        side = 'Buy'
+                        order = bybit.create_market_order(
+                            
                             symbol=symbol,
                             side=side,
-                            orderType="Market",
-                            qty=amount,
-                        ))
+                            
+                            amount=amount,
+                        )
                         if order:
                             print(f"Position closed: {order}")
                             time.sleep(60)
                             break
                     else:
-                        side = 'sell'
-                        order = (session.place_order(
-                            category="linear",
+                        side = 'Sell'
+                        order = order = bybit.create_market_order(
+                            
                             symbol=symbol,
                             side=side,
-                            orderType="Market",
-                            qty=amount,
-                        ))
+                            
+                            amount=amount,)
                         if order:
                             print(f"Position closed: {order}")
                             time.sleep(60)
