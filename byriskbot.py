@@ -46,6 +46,8 @@ def kill_switch():
 
                 ds = position['id']
                 symbol = position['symbol']
+                
+                print(symbol)
                 entryPrice = position['entryPrice']
                 amount = position['contracts']
 
@@ -69,9 +71,9 @@ def kill_switch():
                     print(f"Closing position for {symbol} with PnL: {pnl}%")
                 
                     if position['side'] == 'short':
-                        side = 'Buy'
-                        order = bybit.create_market_order(
-                            
+                        side = 'buy'
+                        order = (session.place_order(
+                            category="linear",
                             symbol=symbol,
                             side=side,
                             
@@ -82,9 +84,9 @@ def kill_switch():
                             time.sleep(60)
                             break
                     else:
-                        side = 'Sell'
-                        order = order = bybit.create_market_order(
-                            
+                        side = 'sell'
+                        order = (session.place_order(
+                            category="linear",
                             symbol=symbol,
                             side=side,
                             
