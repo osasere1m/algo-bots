@@ -49,7 +49,7 @@ def trading_bot():
     symbol = 'AAVE/USDT'
     amount = 0.1 
     type = 'market'
-    timeframe = '4h'
+    timeframe = '1h'
     limit = 200
     ohlcv = bybit.fetch_ohlcv(symbol, timeframe)
 
@@ -57,7 +57,7 @@ def trading_bot():
     df = pd.DataFrame(ohlcv, columns=['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume'])
     df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
     df.set_index('Timestamp', inplace=True)
-    print(df)
+    print(df.tail)
     # Step 5: Calculate technical indicators
 
     #df.ta.ema(length=20, append=True)
@@ -87,7 +87,7 @@ def trading_bot():
     #entry signal
     df["entrysignal"] = 0
  
-    df.loc[df["Close"] < df["SMA_12"], "entrysignal" ]= 1 
+    df.loc[(df["Close"] < df["SMA_12"]), "entrysignal" ]= 1 
     #df.loc[df["Low"] < df["SMA_12"], "entrysignal" ]= 2 
 
 
